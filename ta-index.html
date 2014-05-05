@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<!--
+ Tracheal Aire       bit.ly/airwayta2
+   Nicholas McGill   nmcgill.com
+   Michael Rivera    mikeriv.com
+   Source            github.com/mriveralee/tracheal-aire
+
+  An open-source Williams Airway Intubator.  Using OpenJSCAD (openjscad.org), this script takes in a numer of parameters about a patient's throat and can generate a 3D model, exportable to STL (binary or ASCII), AMF, and X3D formats.
+
+  This intubator is an experimental form, which reverses the typical curved portion on a standard Williams Airway Intubator.
+-->
+<title>Tracheal Aire</title>
+<link rel="shortcut icon" href="imgs/favicon.png" type="image/x-png">
+<link rel="stylesheet" href="jquery/themes/base/jquery-ui.css" />
+<script src="jquery/jquery-1.9.1.js"></script>
+<script src="jquery/jquery-ui.js"></script>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="stylesheet" href="openjscad.css" type="text/css">
+</head>
+
+
+<body onload="onload()">
+<script src="main.js"></script>
+<script src="lightgl.js"></script>
+<script src="csg.js"></script>
+<script src="openjscad.js"></script>
+<script src="openscad.js"></script>
+<script src="underscore.js"></script>
+<!--script src="openscad-openjscad-translator.js"></script-->
+
+<script lang=JavaScript>
+var version = '0.017 (2013/06/10)';
+var me = document.location.toString().match(/^file:/)?'web-offline':'web-online'; // me: {cli, web-offline, web-online}
+var browser = 'unknown';
+if(navigator.userAgent.match(/(opera|chrome|safari|firefox|msie)/i))
+   browser = RegExp.$1.toLowerCase();
+
+$(document).ready(function() {
+   $("#viewer").height($(window).height());
+
+   $(window).resize(function() {                // adjust the relevant divs
+      $("#viewer").width($(window).width());
+      $("#viewer").height($(window).height());
+   });
+});
+</script>
+</head>
+<body>
+
+<img id="header" src="imgs/title.png">
+
+
+<div id="editor" style="display: none;">
+ /*
+   Tracheal Aire
+     Nicholas McGill (nmcgill.com)
+     Michael Rivera  (mikeriv.com)
+
+   An open-source Williams Airway Intubator.  Using OpenJSCAD (openjscad.org), this script takes in a numer of parameters about a patient's throat and can generate a 3D model, exportable
+*/
+
+/*
+ main
+    Pull in the parameters from the web interface and return an intubator model
+*/
+function main(params)
+{
+    var intubator = trache(
+        params.plateHoleD,
+        params.tubeP1Length,
+        params.h_t,
+        params.r_tor,
+        params.resolution
+    );
+    return intubator;
+}
+
+/*
+ getParameterDefinitions
+    Here we define the user editable parameters
+*/
+function getParameterDefinitions() {
+  return [
+    { name: 'plateHoleD',   type: 'float', initial: 15,  caption: "Hole diameter [mm]:" },
+    { name: 'tubeP1Length', type: 'float', initial: 28,  caption: "Tube length [mm]:" },
+    { name: 'h_t',          type: 'float', initial: 35,  caption: "Tube height [mm]:" },
+    { name: 'r_tor',        type: 'float', initial: 35,  caption: "Curvature [mm]:" },
+    { name: 'resolution',   type: 'float', initial: 30,  caption: "Resolution:" }   // resolution of the cylinders
+  ];
+}
+
+/*
+ trache
+    With user-defined params and hard-coded vars, makes the front_plate, tube1, and tube2 and unions all pieces in the correct fashion
+    Inputs
+      plateHoleD [mm]:     Hole diameter in the front plate / interior of tube
+      tubeP1Length [mm]:   Length of the straight tube part
+      h_t [mm]:         Height of the tube curve -- commands the reach down throat of the intubator
+      r_tor [mm]:          Curvature of the end part of the intubator
+    Output
+      finalTube [3D model]: Union of front plate, tube1, and tube2
+*/
+function trache(plateHoleD, tubeP1Length, h_t, r_tor, resolution){
+
+    // Variables
+    plateW = 35;                       // [mm] width of front plate
+    plateH = 28;                       // [mm] height of front plate
+    plateT = 3.25;                     // [mm] thickness of front plate
+    wallThickness = 1.75;                 // [mm] wall thickness of airway
+    tubeOuterRad = plateHoleD/2+wallThickness;  // [mm] outer radius of tube
+    fine = resolution;
+
+    // Front Plate
+    var front_plate = make_front_plate(plateHoleD, plateW, plateH, plateT, wallThickness);
+
+    // Tube Part 1
+    var tube1       = make_tube1(plateT, tubeP1Length, tubeOuterRad, fine, plateHoleD);
+
+    // Tube Part 2
+    var tube2       = make_tube2(r_tor, h_t, wallThickness, fine, plateT, tubeP1Length, tubeOuterRad, plateHoleD);
+
+    // Union the three pieces together
+    var finalTube   = union(front_plate, tube1, tube2);
+
+    return finalTube;
+}
+
+function make_front_plate(plateHoleD, plateW, plateH, plateT, wallThickness){
+
+    var plateRounded        = CAG.roundedRectangle({center: [0, 0], radius: [plateW/2, plateH/2], roundradius: 5, resolution: 24});
+    var plateHole           = CAG.circle({center: [0, 0], radius: plateHoleD/2, resolution: fine});
+    var dimp                = CAG.circle({center: [0, 0.65*plateH], radius: plateHoleD/2, resolution: fine});
+    var frontPlate          = (plateRounded.subtract(plateHole)).subtract(dimp);
+    var extrudedFrontPlate  = linear_extrude({ height: plateT }, frontPlate);
+
+    return extrudedFrontPlate;
+}
+
+function make_tube1(plateT, tubeP1Length, tubeOuterRad, fine, plateHoleD){
+    var outerCyl = CSG.cylinder({
+        start: [0, 0, plateT],
+        end: [0, 0, tubeP1Length+plateT],
+        radius: tubeOuterRad,
+        resolution: fine        // optional
+    });
+    var innerCyl = CSG.cylinder({
+        start: [0, 0, plateT],
+        end: [0, 0, tubeP1Length+plateT],
+        radius: plateHoleD/2,
+        resolution: fine        // optional
+    });
+    var tube1 = outerCyl.subtract(innerCyl);
+
+    return tube1;
+}
+
+
+function make_tube2(r_tor, h_t, wallThickness, fine, plateT, tubeP1Length, tubeOuterRad, plateHoleD) {
+
+    var r_o         = tubeOuterRad;         //
+    var r_i         = r_o - wallThickness;
+    var r_oe        = r_tor + r_o;
+    var r_sq        = r_tor - 2*r_o;
+    var s_sq        = r_o*2;
+
+    var largeRing   = rotate_extrude(translate([r_tor,0,0],circle({r: r_o, fn: fine, center: true})));
+    var smallRing   = rotate_extrude(translate([r_tor,0,0],circle({r: r_i, fn: fine, center: true})));
+    var squareRing   = translate([0,0,-s_sq/2],rotate_extrude(translate([r_sq,0,0],square(s_sq))));
+    var donut       = (largeRing.subtract(smallRing)).subtract(squareRing);
+
+    var TWOD_block  = CAG.fromPoints([ [0,r_oe], [-r_oe,r_oe], [-r_oe,-r_oe], [r_oe,-r_oe], [r_oe,r_oe-h_t], [0,r_oe-h_t] ]);
+    var THREED_block= linear_extrude({ height: 2*r_o }, TWOD_block);
+
+    var tube2       = rotate([0,0,90],rotate([0,-90,0],rotate([-90,0,0], donut.subtract(translate([0,0,-r_o],THREED_block)) )));
+    tube2           = translate([0,-r_tor,tubeP1Length+plateT], tube2);
+
+   return tube2;
+}
+</div>
+
+<div oncontextmenu="return false;" id="viewer"></div> <!-- avoiding popup when right mouse is clicked -->
+<div class='param-box' id="tube-list-container">
+  <div class="parameterheader">Model Type:</div>
+  <form id="form1" name="form1" method="" action="">
+    <label>
+      <select name="tube-names" id="tube-list">
+        <option value="Williams Airway">Williams Airway</option>
+        <option value="Experimental Tube">Experimental Tube</option>
+      </select>
+    </label>
+  </form>
+</div>
+<div id="parametersdiv"></div>
+<div id="tail">
+   <div id="statusdiv"></div>
+   <div id="errordiv"></div>
+   <div id="filedropzone" style="display: none;">
+     <div id="filedropzone_empty"></div>
+     <div id="filedropzone_filled">
+       <span id="currentfile">...</span>
+       <div id="filebuttons">
+         <button id="getstlbutton" style="display:none" onclick="getStl();">Get STL</button>
+         <button onclick="superviseAllFiles({forceReload:true});">Reload</button>
+       <label for="autoreload">Auto Reload</label><input type="checkbox" name="autoreload" value="" id="autoreload" onclick="toggleAutoReload();" checked>
+       </div>
+     </div>
+   </div>
+</div>
+
+<div id=footer>
+<a target=_blank href="http://nmcgill.com">Nick McGill</a> &middot; <a target=_blank href="http://mikeriv.com">Mike Rivera</a> &middot; Based on <a target=_blank href="https://github.com/Spiritdude/OpenJSCAD.org"> OpenJSCAD</a>
+</div>
+
+<!--Editor stuff-->
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+
+
+<script>
+var gCurrentFile = null;
+var gProcessor = null;
+var editor = null;
+
+// var gCurrentFiles = [];       // linear array, contains files (to read)
+var gMemFs = [];              // associated array, contains file content in source gMemFs[i].{name,source}
+var gMemFsCount = 0;          // async reading: count of already read files
+var gMemFsTotal = 0;          // async reading: total files to read (Count==Total => all files read)
+var gMemFsChanged = 0;        // how many files have changed
+var gRootFs = [];             // root(s) of folders
+
+var _includePath = './';
+
+function onload() {
+   // -- http://ace.ajax.org/#nav=howto
+   editor = ace.edit("editor");
+   editor.setTheme("ace/theme/chrome");
+   //document.getElementById('ace_gutter').style.background = 'none';
+   editor.getSession().setMode("ace/mode/javascript");
+   editor.getSession().on('change', function(e) {
+      ;
+   });
+   ['Shift-Return'].forEach(function(key) {
+      editor.commands.addCommand({
+         name: 'myCommand',
+         bindKey: { win: key, mac: key },
+         exec: function(editor) {
+            var src = editor.getValue();
+            if(src.match(/^\/\/\!OpenSCAD/i)) {
+               editor.getSession().setMode("ace/mode/scad");
+               src = openscadOpenJscadParser.parse(src);
+            } else {
+               editor.getSession().setMode("ace/mode/javascript");
+            }
+            gMemFs = [];
+            gProcessor.setJsCad(src);
+         },
+      });
+   });
+
+   gProcessor = new OpenJsCad.Processor(document.getElementById("viewer"));
+   gProcessor.setJsCad(editor.getValue());
+}
+
+
+// ---------------------------------------------------------------------------------------------------------
+
+function setCookie(name, value, days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        var expires = "; expires=" + date.toGMTString();
+    } else var expires = "";
+    document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
+}
+
+function getCookie(name) {
+    var nameEQ = escape(name) + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return unescape(c.substring(nameEQ.length, c.length));
+    }
+    return null;
+}
+
+function deleteCookie(name) {
+    createCookie(name, "", -1);
+}
+
+</script>
+
+<div id="williams-airway-data" style="display:none;">
+  /*
+   Tracheal Aire
+     Nicholas McGill (nmcgill.com)
+     Michael Rivera  (mikeriv.com)
+
+   An open-source Williams Airway Intubator.  Using OpenJSCAD (openjscad.org), this script takes in a numer of parameters about a patient's throat and can generate a 3D model, exportable
+*/
+
+/*
+ main
+    Pull in the parameters from the web interface and return an intubator model
+*/
+function main(params)
+{
+    var intubator = trache(
+        params.plateHoleD,
+        params.tubeP1Length,
+        params.h_t,
+        params.r_tor,
+        params.resolution
+    );
+    return intubator;
+}
+
+/*
+ getParameterDefinitions
+    Here we define the user editable parameters
+*/
+function getParameterDefinitions() {
+  return [
+    { name: 'plateHoleD',   type: 'float', initial: 15,  caption: "Hole diameter [mm]:" },
+    { name: 'tubeP1Length', type: 'float', initial: 28,  caption: "Tube length [mm]:" },
+    { name: 'h_t',          type: 'float', initial: 35,  caption: "Tube height [mm]:" },
+    { name: 'r_tor',        type: 'float', initial: 35,  caption: "Curvature Radius [mm]:" },
+    { name: 'resolution',   type: 'float', initial: 30,  caption: "Resolution:" }   // resolution of the cylinders
+  ];
+}
+
+/*
+ trache
+    With user-defined params and hard-coded vars, makes the front_plate, tube1, and tube2 and unions all pieces in the correct fashion
+    Inputs
+      plateHoleD [mm]:     Hole diameter in the front plate / interior of tube
+      tubeP1Length [mm]:   Length of the straight tube part
+      h_t [mm]:         Height of the tube curve -- commands the reach down throat of the intubator
+      r_tor [mm]:          Curvature of the end part of the intubator
+    Output
+      finalTube [3D model]: Union of front plate, tube1, and tube2
+*/
+function trache(plateHoleD, tubeP1Length, h_t, r_tor, resolution){
+
+    // Variables
+    plateW = 35;                       // [mm] width of front plate
+    plateH = 28;                       // [mm] height of front plate
+    plateT = 3.25;                     // [mm] thickness of front plate
+    wallThickness = 1.75;                 // [mm] wall thickness of airway
+    tubeOuterRad = plateHoleD/2+wallThickness;  // [mm] outer radius of tube
+    fine = resolution;
+
+    // Front Plate
+    var front_plate = make_front_plate(plateHoleD, plateW, plateH, plateT, wallThickness);
+
+    // Tube Part 1
+    var tube1       = make_tube1(plateT, tubeP1Length, tubeOuterRad, fine, plateHoleD);
+
+    // Tube Part 2
+    var tube2       = make_tube2(r_tor, h_t, wallThickness, fine, plateT, tubeP1Length, tubeOuterRad, plateHoleD);
+
+    // Union the three pieces together
+    var finalTube   = union(front_plate, tube1, tube2);
+
+    return finalTube;
+}
+
+function make_front_plate(plateHoleD, plateW, plateH, plateT, wallThickness){
+
+    var plateRounded        = CAG.roundedRectangle({center: [0, 0], radius: [plateW/2, plateH/2], roundradius: 5, resolution: 24});
+    var plateHole           = CAG.circle({center: [0, 0], radius: plateHoleD/2, resolution: fine});
+    var dimp                = CAG.circle({center: [0, 0.65*plateH], radius: plateHoleD/2, resolution: fine});
+    var frontPlate          = (plateRounded.subtract(plateHole)).subtract(dimp);
+    var extrudedFrontPlate  = linear_extrude({ height: plateT }, frontPlate);
+
+    return extrudedFrontPlate;
+}
+
+function make_tube1(plateT, tubeP1Length, tubeOuterRad, fine, plateHoleD){
+    var outerCyl = CSG.cylinder({
+        start: [0, 0, plateT],
+        end: [0, 0, tubeP1Length+plateT],
+        radius: tubeOuterRad,
+        resolution: fine        // optional
+    });
+    var innerCyl = CSG.cylinder({
+        start: [0, 0, plateT],
+        end: [0, 0, tubeP1Length+plateT],
+        radius: plateHoleD/2,
+        resolution: fine        // optional
+    });
+    var tube1 = outerCyl.subtract(innerCyl);
+
+    return tube1;
+}
+
+
+function make_tube2(r_tor, h_t, wallThickness, fine, plateT, tubeP1Length, tubeOuterRad, plateHoleD) {
+
+    var r_o         = tubeOuterRad;         //
+    var r_i         = r_o - wallThickness;
+    var r_oe        = r_tor + r_o;
+    var r_sq        = r_tor - 2*r_o;
+    var s_sq        = r_o*2;
+
+    var largeRing   = rotate_extrude(translate([r_tor,0,0],circle({r: r_o, fn: fine, center: true})));
+    var smallRing   = rotate_extrude(translate([r_tor,0,0],circle({r: r_i, fn: fine, center: true})));
+    var squareRing   = translate([0,0,-s_sq/2],rotate_extrude(translate([r_sq,0,0],square(s_sq))));
+    var donut       = (largeRing.subtract(smallRing)).subtract(squareRing);
+
+    var TWOD_block  = CAG.fromPoints([ [0,r_oe], [-r_oe,r_oe], [-r_oe,-r_oe], [r_oe,-r_oe], [r_oe,r_oe-h_t], [0,r_oe-h_t] ]);
+    var THREED_block= linear_extrude({ height: 2*r_o }, TWOD_block);
+
+    var tube2       = rotate([0,0,90],rotate([0,-90,0],rotate([-90,0,0], donut.subtract(translate([0,0,-r_o],THREED_block)) )));
+    tube2           = translate([0,-r_tor,tubeP1Length+plateT], tube2);
+
+   return tube2;
+}
+
+</div>
+<div id="experimental-tube-data" style="display:none;">/*
+    Tracheal Aire       (bit.ly/airwayta1)
+      Nicholas McGill   (nmcgill.com)
+      Michael Rivera    (mikeriv.com)
+
+    An open-source Williams Airway Intubator.  Using OpenJSCAD (openjscad.org), this script takes in a numer of parameters about a patient's throat and can generate a 3D model, exportable
+*/
+
+/*
+ main
+    Pull in the parameters from the web interface and return an intubator model
+*/
+function main(params)
+{
+    var intubator = trache(
+        params.plateHoleD,
+        params.tubeP1Length,
+        params.h_t,
+        params.r_tor,
+        params.resolution
+    );
+    return intubator;
+}
+
+/*
+ getParameterDefinitions
+    Here we define the user editable parameters
+*/
+function getParameterDefinitions() {
+  return [
+    { name: 'plateHoleD',   type: 'float', initial: 15,  caption: "Hole diameter [mm]:" },
+    { name: 'tubeP1Length', type: 'float', initial: 28,  caption: "Tube length [mm]:" },
+    { name: 'h_t',          type: 'float', initial: 40,  caption: "Tube height [mm]:" },
+    { name: 'r_tor',        type: 'float', initial: 35,  caption: "Curvature Radius [mm]:" },
+    { name: 'resolution',   type: 'float', initial: 30,  caption: "Resolution:" }   // resolution of the cylinders
+  ];
+}
+
+/*
+ trache
+    With user-defined params and hard-coded vars, makes the front_plate, tube1, and tube2 and unions all pieces in the correct fashion
+    Inputs
+      plateHoleD [mm]:      Hole diameter in the front plate / interior of tube
+      tubeP1Length [mm]:    Length of the straight tube part
+      h_t [mm]:             Height of the tube curve -- commands the reach down throat of the intubator
+      r_tor [mm]:           Curvature of the end part of the intubator
+    Output
+      finalTube [3D model]: Union of front plate, tube1, and tube2
+*/
+function trache(plateHoleD, tubeP1Length, h_t, r_tor, resolution){
+
+    // Variables
+    plateW = 35;                                // [mm] width of front plate
+    plateH = 28;                                // [mm] height of front plate
+    plateT = 3.25;                              // [mm] thickness of front plate
+    wallThickness = 1.75;                       // [mm] wall thickness of airway
+    tubeOuterRad = plateHoleD/2+wallThickness;  // [mm] outer radius of tube
+    fine = resolution;
+
+    // Front Plate
+    var front_plate = make_front_plate(plateHoleD, plateW, plateH, plateT, wallThickness);
+
+    // Tube Part 1
+    var tube1       = make_tube1(plateT, tubeP1Length, tubeOuterRad, fine, plateHoleD);
+
+    // Tube Part 2
+    var tube2       = make_tube2(r_tor, h_t, wallThickness, fine, plateT, tubeP1Length, tubeOuterRad, plateHoleD);
+
+    // Union the three pieces together
+    var finalTube   = union(front_plate, tube1, tube2);
+
+    return finalTube;
+}
+
+function make_front_plate(plateHoleD, plateW, plateH, plateT, wallThickness){
+
+    var plateRounded        = CAG.roundedRectangle({center: [0, 0], radius: [plateW/2, plateH/2], roundradius: 5, resolution: 24});
+    var plateHole           = CAG.circle({center: [0, 0], radius: plateHoleD/2, resolution: fine});
+    var dimp                = CAG.circle({center: [0, 0.65*plateH], radius: plateHoleD/2, resolution: fine});
+    var frontPlate          = (plateRounded.subtract(plateHole)).subtract(dimp);
+    var extrudedFrontPlate  = linear_extrude({ height: plateT }, frontPlate);
+
+    return extrudedFrontPlate;
+}
+
+function make_tube1(plateT, tubeP1Length, tubeOuterRad, fine, plateHoleD){
+    var outerCyl = CSG.cylinder({
+        start: [0, 0, plateT],
+        end: [0, 0, tubeP1Length+plateT],
+        radius: tubeOuterRad,
+        resolution: fine        // optional
+    });
+    var innerCyl = CSG.cylinder({
+        start: [0, 0, plateT],
+        end: [0, 0, tubeP1Length+plateT],
+        radius: plateHoleD/2,
+        resolution: fine        // optional
+    });
+    var tube1 = outerCyl.subtract(innerCyl);
+
+    return tube1;
+}
+
+
+function make_tube2(r_tor, h_t, wallThickness, fine, plateT, tubeP1Length, tubeOuterRad, plateHoleD) {
+
+    var r_o         = tubeOuterRad;         //
+    var r_i         = r_o - wallThickness;
+    var r_oe        = r_tor + r_o;
+    var r_sq        = r_tor - 0.5*r_o;
+    var s_sq        = r_o*2;
+
+    var largeRing   = rotate_extrude(translate([r_tor,0,0],circle({r: r_o, fn: fine, center: true})));
+    var smallRing   = rotate_extrude(translate([r_tor,0,0],circle({r: r_i, fn: fine, center: true})));
+    var squareRing   = translate([0,0,-s_sq/2],rotate_extrude(translate([r_sq,0,0],square(s_sq))));
+    var donut       = (largeRing.subtract(smallRing)).subtract(squareRing);
+
+    var TWOD_block  = CAG.fromPoints([ [0,r_oe], [-r_oe,r_oe], [-r_oe,-r_oe], [r_oe,-r_oe], [r_oe,r_oe-h_t], [0,r_oe-h_t] ]);
+    var THREED_block= linear_extrude({ height: 2*r_o }, TWOD_block);
+
+    var tube2       = rotate([0,0,90],rotate([0,-90,0],rotate([-90,0,0], donut.subtract(translate([0,0,-r_o],THREED_block)) )));
+    tube2           = translate([0,-r_tor,tubeP1Length+plateT], tube2);
+
+   return tube2;
+}
+</div>
+
+</body></html>

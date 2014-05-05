@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Tracheal Aire 2.0</title>
+  <meta charset="UTF-8">
+  <link rel="shortcut icon" href="imgs/favicon.png" type="image/x-png">
+  <link rel="stylesheet" href="./css/style.css">
+
+  <!-- Third party -->
+  <script type="text/javascript" src="./ext/jquery/jquery-2.1.0.min.js"></script>
+  <script type="text/javascript" src="./ext/jquery-ui/jquery-ui-1.10.4.min.js"></script>
+  <script type="text/javascript" src="./ext/flot/jquery.flot.min.js"></script>
+  <script type="text/javascript" src="./ext/openjpeg/openjpeg.js"></script>
+  <link rel="stylesheet" href="./ext/jquery-ui/themes/tracheal-aire-2-0/jquery-ui-1.10.4.custom.min.css">
+  <!-- http://jqueryui.com/download/#!folderName=tracheal-aire-2-0&zThemeParams=5d00000100dd05000000000000003d8888d844329a8dfe02723de3e57025317821810f9d630423a0d88a0e1983112c135eca36423191882fa6d78873bce00ee53be6bc16530963bb2a7989a680019cdaa24703706096b85441bafb41a86f81ca82f6d10b4044e7013223fe6522ad3b3bc7de95e1fece1cc34f3c5d58834bf345c596f78b66fb72ab00160f19d202eed4284c74e555a93d85f6ebb8173d2c7269747650188d8d1ba69ce01cbc207202b29545062f711051ab5973cba85e578627ccc53948aaa9c7c1b40552b15a0d2b323758859e43bc450d6ed49d69893bfbba306d6db6ae9798c1d6f1bd379ec0b3f07a2799b5910cdc154854cffec6feb3de6671356fa6db84da0ae847a6f53361b6715230355fed757b4822bd202941d9b1fc82e30d4943d43bed542a7af266ad3cdb93b387abb692faedf0f46f6a91201b49d6e8c9736295757ea456da9e3a6fcb8b85dfb5772981c6c44877818167e4f5d33c043099076b966f0081b9a771cfa4641066627dc0aa12d253ee60421c7809abea4ef2fed7160a962a3834d5301245ca7020e4fa53ad3e50ef27bf9e50f751c0a9db6bbb94aff0abefde18a182df43ac58be363fe069bb081cd23705794f0862e76cc96e0cf71403ffee079774-->
+
+  <!-- Local -->
+  <script type="text/javascript" src="./src/application.js"></script>
+  <script type="text/javascript" src="./src/dicom/dicomParser.js"></script>
+  <script type="text/javascript" src="./src/dicom/dictionary.js"></script>
+  <script type="text/javascript" src="./src/gui/browser.js"></script>
+  <script type="text/javascript" src="./src/gui/filter.js"></script>
+  <script type="text/javascript" src="./src/gui/generic.js"></script>
+  <script type="text/javascript" src="./src/gui/handlers.js"></script>
+  <script type="text/javascript" src="./src/gui/help.js"></script>
+  <script type="text/javascript" src="./src/gui/html.js"></script>
+  <script type="text/javascript" src="./src/gui/layer.js"></script>
+  <script type="text/javascript" src="./src/gui/loader.js"></script>
+  <script type="text/javascript" src="./src/gui/style.js"></script>
+  <script type="text/javascript" src="./src/gui/tools.js"></script>
+  <script type="text/javascript" src="./src/gui/undo.js"></script>
+  <script type="text/javascript" src="./src/image/filter.js"></script>
+  <script type="text/javascript" src="./src/image/image.js"></script>
+  <script type="text/javascript" src="./src/image/luts.js"></script>
+  <script type="text/javascript" src="./src/image/reader.js"></script>
+  <script type="text/javascript" src="./src/image/view.js"></script>
+  <script type="text/javascript" src="./src/io/file.js"></script>
+  <script type="text/javascript" src="./src/io/url.js"></script>
+  <script type="text/javascript" src="./src/math/bucketQueue.js"></script>
+  <script type="text/javascript" src="./src/math/scissors.js"></script>
+  <script type="text/javascript" src="./src/math/shapes.js"></script>
+  <script type="text/javascript" src="./src/tools/circle.js"></script>
+  <script type="text/javascript" src="./src/tools/draw.js"></script>
+  <script type="text/javascript" src="./src/tools/filter.js"></script>
+  <script type="text/javascript" src="./src/tools/info.js"></script>
+  <script type="text/javascript" src="./src/tools/line.js"></script>
+  <script type="text/javascript" src="./src/tools/livewire.js"></script>
+  <script type="text/javascript" src="./src/tools/rectangle.js"></script>
+  <script type="text/javascript" src="./src/tools/roi.js"></script>
+  <script type="text/javascript" src="./src/tools/scroll.js"></script>
+  <script type="text/javascript" src="./src/tools/toolbox.js"></script>
+  <script type="text/javascript" src="./src/tools/undo.js"></script>
+  <script type="text/javascript" src="./src/tools/windowLevel.js"></script>
+  <script type="text/javascript" src="./src/tools/zoomPan.js"></script>
+  <script type="text/javascript" src="./src/utils/string.js"></script>
+
+  <!--  Launch the app -->
+  <script type="text/javascript" src="appgui.js"></script>
+  <script type="text/javascript" src="applauncher.js"></script>
+
+  <!-- Tracheal Aire Scripts -->
+  <script src="underscore.js"></script>
+  <script src="lightgl.js"></script>
+  <script src="csg.js"></script>
+  <script src="openjscad.js"></script>
+  <script src="openscad.js"></script>
+  <script type="text/javascript" src="ta-util.js"></script>
+
+  <!-- Ace Editor Code -->
+
+
+  <script type="text/javascript">
+  TRACHEAL_AIRE = {
+    VIEWER_DIV: '#tracheal-aire-viewer',
+    INPUTS_DIV: '#tracheal-aire-inputs'
+  };
+
+  </script>
+
+</head>
+
+<body onload="onload()">
+
+  <div id="pageHeader">
+    <div class='container'>
+    <!-- Title -->
+    <h1><img id="header-img" src="imgs/title.png"> <span>2.0</span> - Integrated DICOM Viewer</h1>
+      <div id="toolbar"></div>
+    </div>
+    </div><!-- /pageHeader -->
+
+    <div id="pageMain">
+
+      <!--- Tracheal Aire -->
+
+      <div id="tracheal-aire-viewer" style="padding: 0; padding-top: 0.25em;" title="Tracheal Aire View" oncontextmenu="return false;">
+      </div> <!-- avoiding popup when right mouse is clicked -->
+
+      <!-- Open file -->
+      <div id="openData" title="File">
+        <div id="loaderlist"></div>
+        <div id="progressbar"></div>
+      </div>
+
+      <!-- Toolbox -->
+      <div id="toolbox" title="Toolbox">
+        <ul id="toolList"></ul>
+      </div>
+
+      <!-- History -->
+      <div id="history" title="History"></div>
+
+      <!-- Tags -->
+      <div id="tags" title="Tags"></div>
+
+      <!-- Help -->
+      <div id="help" title="Help"></div>
+
+      <!-- Tracheal Air Viewer -->
+      <div id="tracheal-aire-inputs" title="Tracheal Aire Input">
+        <div class='param-box' id="tube-list-container">
+          <div class="parameterheader">Model Type:</div>
+          <form id="form1" name="form1" method="" action="">
+            <label>
+              <select name="tube-names" id="tube-list">
+                <option value="Williams Airway">Williams Airway</option>
+                <option value="Experimental Tube">Experimental Tube</option>
+              </select>
+            </label>
+          </form>
+        </div>
+        <div id="parametersdiv"></div>
+        <div id="tail">
+          <div id="statusdiv"></div>
+          <div id="errordiv"></div>
+          <div id="filedropzone" style="display: none;">
+            <div id="filedropzone_empty"></div>
+            <div id="filedropzone_filled">
+              <span id="currentfile">...</span>
+              <div id="filebuttons">
+                <button id="getstlbutton" style="display:none" onclick="getStl();">Get STL</button>
+                <button onclick="superviseAllFiles({forceReload:true});">Reload</button>
+                <label for="autoreload">Auto Reload</label><input type="checkbox" name="autoreload" value="" id="autoreload" onclick="toggleAutoReload();" checked>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer Container -->
+      <div id="layerDialog" title="Image">
+        <div id="layerContainer">
+
+          <canvas id="imageLayer">Only for HTML5 compatible browsers...</canvas>
+          <canvas id="drawLayer">Only for HTML5 compatible browsers...</canvas>
+          <canvas id="tempLayer">Only for HTML5 compatible browsers...</canvas>
+          <div id="infoLayer">
+            <div id="infotl"></div>
+            <div id="infotr"></div>
+            <div id="infobl"></div>
+            <div id="infobr"><div id="plot"></div></div>
+          </div><!-- /infoLayer -->
+        </div><!-- /layerContainer -->
+      </div><!-- /layerDialog -->
+    </div><!-- /pageMain -->
+
+    <div id=footer>
+      By <a target='_blank' href="http://mikeriv.com">Michael Rivera</a> &middot; Based on
+      <a target=_blank href="http://trachealaire.mikeriv.com/v1/"> Tracheal Aire</a> & <a target='_blank' href="http://ivmartel.github.io/dwv">DWV </a>
+    </div>
+
+  </body>
+  </html>

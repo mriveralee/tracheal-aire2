@@ -1,0 +1,436 @@
+body {
+  background-color:#fff;
+  /*margin: 10px;*/
+  margin: 0px;
+  padding: 0;
+  /*font-size: 80%;*/
+  font-size: 12px;
+  line-height: 1.42857143;
+  color: #333;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  overflow:hidden;
+}
+
+
+
+h1 {
+  font-size: 18px;
+}
+
+
+
+/* Layers */
+#layerContainer { position: relative; padding: 0; }
+#imageLayer { position: absolute; width: 100%; height: 100%; }
+#drawLayer { position: absolute; width: 100%; height: 100%; }
+#tempLayer { position: absolute; width: 100%; height: 100%; }
+
+/* Info */
+#infotl { position: absolute; top: 0; left: 0; text-align: left; }
+#infotr { position: absolute; top: 0; right: 0; text-align: right; }
+#infobl { position: absolute; bottom: 0; left: 0; text-align: left; }
+#infobr { position: absolute; bottom: 0; right: 0; text-align: right; }
+#plot { position: absolute; width: 100px; height: 50px; bottom: 15px; }
+#infoLayer ul { margin: 0; padding: 2px; list-style-type: none; }
+#infoLayer canvas { margin: 0; padding: 2px; }
+
+/* Tag list */
+table.tagList { border-collapse: collapse; }
+table.tagList thead td { font-weight: bold; }
+table.tagList td { border: 1px solid grey; padding: 2px; }
+#tags .highlighted { background: #f87217; }
+#tags form { width: 50%; }
+
+#accordion img {
+  -webkit-filter: invert(1);
+}
+
+.btn-focused {
+  color: #5289DB;
+}
+
+#pageHeader {
+  background-color: #f8f8f8;
+  min-height: 45px;
+  margin-bottom: 20px;
+  border: 1px solid #e7e7e7;;
+  margin-right: auto;
+  margin-left: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+  top: 0;
+  border-width: 0 0 1px;
+}
+
+#pageHeader h1 {
+  float: left;
+  padding: 12.5px 15px;
+  display: inline-block;
+  margin: 0;
+  color: #616161;
+  font-weight: 400;
+  /*color: #2D6DAD;*/
+}
+
+#pageHeader h1 span {
+  color: #5289DB;
+  font-weight: 500;
+}
+
+#pageHeader a { color: #ddf; }
+
+#pageHeader #toolbar {
+  float: left;
+  padding: 12.5px 15px;
+  display: inline-block;
+  margin: 0;
+  color: #5992DB;
+
+}
+
+#header-img {
+  z-index: 20;
+  display: inline-block;
+  width: 118px;
+  float: left;
+}
+
+.container {
+  width: 1170px;
+}
+
+#toolbox li:first-child {
+  list-style-type: none;
+  padding-bottom: 10px;
+  margin-left: -20px;
+}
+
+#toolbox li {
+ list-style-type: none;
+}
+
+#pageMain {
+  position: absolute;
+  height: 92%;
+  width: 100%;
+  bottom: 5px;
+  left: 0px;
+  background-color: #fff;
+/*  position: absolute;
+  height: 92%;
+  width: 99%;
+  bottom: 5px;
+  left: 5px;
+  background-color: #fff;*/
+}
+
+#infotl {
+  color: #333;
+  text-shadow: 0 1px 0 #fff;
+}
+
+#infotr {
+  color: #333;
+  text-shadow: 0 1px 0 #fff;
+}
+
+
+/* TRACHEAL AIRE */
+
+/*
+ * style.css for index.html of http://OpenJSCAD.org/
+ */
+
+
+a {
+   text-decoration: none;
+   color: #5289DB;
+   /*color: #2D6DAD;*/
+   /*color: #6020a0;*/
+   font-weight: bold;
+}
+
+a:hover {
+  text-decoration: none;
+  color: #265B91;
+}
+
+a:visited {
+   /*color: #6020a0 */;
+}
+
+
+#viewer {
+   background: #fff;
+   //width: 100%;
+   //height: 100%;
+   top: 0px;
+   bottom: 0px;
+}
+canvas {
+   cursor: move;
+   padding: 0px;
+   margin: 0px;
+}
+
+#about {
+   position: absolute;
+   width: 30%;
+   left: 30%;
+   top: 30%;
+   font-size: 0.75em;
+   box-shadow: 0px 0px 20px black;
+   color: #404040;
+   border-radius: 20px;
+   background: white;
+   display: none;
+   padding: 1.5em;
+   text-align: center;
+   z-index: 100;
+}
+
+.okButton {
+   border: 2px solid #808080;
+   border-radius: 4px;
+   padding: 0.5em;
+   padding-left: 2em;
+   padding-right: 2em;
+   margin-top: 3em;
+   background: #eee;
+}
+
+.okButton:hover {
+   background: #ccc;
+}
+
+#footer {
+   font-size: 1.0em;
+  text-align: center;
+  position: absolute;
+  /*background: rgba(112, 112, 112, 0.75);*/
+
+  background-color: #f8f8f8;
+  border-top: 1px solid #e7e7e7;
+  display: block;
+  width: 100%;
+  height: 20px;
+  padding-top: 5px;
+  bottom: 0.0em;
+  opacity: 0.8;
+  -moz-opacity: 0.8;      /* css mess (why do it simple, when we can do it complicate!) */
+}
+
+#tail {
+   z-index: 4;
+   position: absolute;
+   bottom: 1em;
+   margin: 1em;
+}
+
+#busy {
+   vertical-align: middle;
+}
+
+.support {
+   vertical-align: bottom;
+}
+
+#menu, #menu nav a {
+   transition: all 0.4s;
+   -o-transition: all 0.4s;
+   -moz-transition: all 0.4s;
+   -webkit-transition: all 0.4s;
+}
+
+#menu {
+   background: white;
+
+   opacity: 0.8;
+   -moz-opacity: 0.8;
+
+   border-right: 1px solid black;
+   width: 250px;
+   padding-left: 20px;
+   padding-right: 10px;
+   position: fixed;
+   z-index: 5;
+
+   font-size: 0.9em;
+
+   box-shadow: 4px 0 10px rgba(0,0,0,0.25);
+   -moz-box-shadow: 4px 0 10px rgba(0,0,0,0.25);
+   -webkit-box-shadow: 4px 0 10px rgba(0,0,0,0.25);
+}
+
+#menu {
+   left: 0;
+}
+
+#menu:hover, #menu:focus ~ #menuHandle:hover, #menuHandle:focus {
+   left: 0 !important;  /* slide out */
+}
+
+#menuHandle {
+   right: -25px;
+   top: 45%;
+   position: absolute;
+   z-index: 6;
+}
+
+#menu nav {
+   position: relative;
+   top: 50px;
+}
+
+#menu nav .navlink {
+}
+
+#menu nav .navlink:hover {
+}
+
+#menu #examples {
+   font-size: 0.6em;
+}
+
+#menu #examples .newExample {
+   border-radius: 5px;
+   background: yellow;
+   padding-left: 4px;
+   padding-right: 4px;
+}
+
+#menu #examples, #menu #examples a {
+   margin-top: 0px;
+}
+
+#menu .info {
+   border-spacing: 0;
+   border-collapse: collapse;
+   margin-bottom: 0.5em;
+}
+
+#menu .info td {
+   margin: 0px;
+   padding-left: 2px;
+   padding-right: 2px;
+   padding-top: 0px;
+   padding-bottom: 0px;
+   font-size: 0.6em;
+}
+
+.info .infoOperation {
+   font-weight: bold;
+   color: #602080;
+}
+
+.info .infoKey {
+   font-weight: bold;
+   color: #808080;
+}
+
+#menuVersion {
+   text-align: center;
+   font-size: 0.6em;
+   color: #666;
+}
+
+.menuSubInfo {
+   font-size: 0.6em;
+   color: #666;
+}
+
+.externalLink {
+   vertical: middle;
+}
+
+#examples {
+   /* width: 60em; */
+   width: auto;
+   z-index: 12;
+   position: absolute;
+   display: none;
+   background: #f8e8ff;
+   border: solid 1px #888;
+   padding: 1em;
+   border-radius: 5px;
+   box-shadow: 0px 0px 10px #849;
+}
+
+#examples td {
+   white-space: nowrap;
+}
+
+#examples li {
+   list-style-type: none;
+}
+
+#examplesList {
+   border-bottom: 1px solid #888;
+   height: 4px;
+   overflow: hidden;
+}
+
+#examplesList:hover {
+   /*height: 100%;*/
+}
+
+#examplesHandle {
+   bottom: 0px;
+   left: 45%;
+   position: relative;
+   z-index: 10;
+}
+
+.examplesSeparator {
+}
+
+#options {
+   width: auto;
+   z-index: 12;
+   position: absolute;
+   display: none;
+   background: #f8e8ff;
+   border: solid 1px #888;
+   padding: 0.5em;
+   border-radius: 5px;
+   box-shadow: 0px 0px 10px #849;
+   font-size: 0.8em;
+}
+
+.optionGroup {
+   border: 1px solid #ccc;
+   border-radius: 5px;
+   padding: 0.5em;
+   margin: 0.5em;
+   background: white;
+}
+
+.optionGroup input, .optionGroup select {
+  background: #fea;
+  border: none;
+}
+
+.optionInfo {
+   font-size: 0.8em;
+   color: #888;
+}
+
+/*
+#parametersdiv input[type='text'] {
+  -moz-box-shadow: 0px 0px 4px #ffffff;
+  -webkit-box-shadow: 0px 0px 4px #ffffff;
+  box-shadow: 0px 0px 4px #ffffff;
+}*/
+
+#parametersdiv input[type='text']:hover {
+  -moz-box-shadow: 0px 0px 4px #ffffff;
+  -webkit-box-shadow: 0px 0px 4px #ffffff;
+  box-shadow: 0px 0px 4px #ffffff;
+}
+
+/*#parametersdiv input:focus {
+  border: 4px solid green;
+}*/
+.focused-parameter {
+  border: 2px solid #5289DB;
+}
