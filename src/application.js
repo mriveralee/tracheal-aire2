@@ -9,7 +9,7 @@ var dwv = dwv || {};
  */
 dwv.App = function()
 {
-    var INITIAL_DICOM_IMAGE = window.location.origin + '/data/neck-ta.dcm'
+    var INITIAL_DICOM_IMAGE = window.location.href + '/data/neck-ta.dcm';
     // Local object
     var self = this;
     // Image
